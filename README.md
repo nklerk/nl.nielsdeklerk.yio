@@ -59,3 +59,7 @@ Understanding that braking changes will happen while the intergration is in full
 - Fixed issues when adding many lights.
 - Started cleaning code.
 - Changed API calls between YIO and Homey. (Breaking)
+
+### 0.2.1
+
+- Fixed a small state change bug.

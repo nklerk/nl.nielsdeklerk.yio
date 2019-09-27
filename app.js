@@ -195,7 +195,7 @@ function subscribeToDeviceEvents(connection, device) {
       try {
         device.makeCapabilityInstance(device.capabilities[i], value => {
           console.log(`=======> statechanged:"${device.capabilities[i]}" to:"${value}" on:"${device.name}".`);
-          let capName = device.capabilities[i].name;
+          let capName = device.capabilities[i];
           const response = JSON.stringify({ type: "event", data: { entity_id: device.id, [capName]: value } });
           console.log(`<======= Inform YIO: ${response}`);
           connection.send(response);
