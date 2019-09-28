@@ -1,13 +1,16 @@
-# YIO intergration. 0.2
+# YIO intergration. 0.3
 
 This app enables YIO to intergrate with Homey.
 It enables controll for Homey connected devices and show's their active state.
 
 ## Install
 
-Install the app by using either the athom app store or use the cource from the github.
+The App can be downloaded at https://apps.athom.com/ when it reaches the public beta stage.
+Code can be manually installed using athom-cli if desired, code can be found https://github.com/nklerk/nl.nielsdeklerk.yio
 
-Edit the config.json file on YIO and include the homey "IPaddress:8936" like:
+## Configuration
+
+Edit the `config.json` file on YIO and include the homey "IPaddress:8936" like:
 
 ```
 "integration": [{
@@ -23,7 +26,7 @@ Edit the config.json file on YIO and include the homey "IPaddress:8936" like:
 ],
 ```
 
-Edit the config.json file on YIO and include the devices you want to controll like:
+Edit the `config.json` file on YIO and include the devices you want to controll like:
 
 ```
 {
@@ -63,3 +66,8 @@ Understanding that braking changes will happen while the intergration is in full
 ### 0.2.1
 
 - Fixed a small state change bug.
+
+### 0.3.0
+
+- Added collor support.
+- Changed handling of initial capability states.

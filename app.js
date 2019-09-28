@@ -1,3 +1,5 @@
+"use strict";
+
 // App for YIO remote.
 // https://github.com/martonborzak/yio-remote/wiki/Homey-integration
 
@@ -5,6 +7,8 @@ const Homey = require("homey");
 const { HomeyAPI } = require("athom-api");
 const WebSocket = require("ws");
 const mdns = require("mdns-js");
+const colorConvert = require("./colorconversions");
+
 //process.setMaxListeners(0);
 
 const API_SERVICE_PORT = 8936;
@@ -84,6 +88,19 @@ class YioApp extends Homey.App {
       console.log(typeof device.capabilitiesObj.onoff.value);
       console.log(value);
     }
+    if (command == "color") {
+      console.log(typeof value);
+      console.log(value);
+      let c = colorConvert.rgbToHsv(value[0], value[1], value[2]);
+      this.setCapabilityValue(device, "light_hue", c[0]);
+      this.setCapabilityValue(device, "light_saturation", c[1]);
+      this.setCapabilityValue(device, "dim", c[2]);
+    } else {
+      this.setCapabilityValue(device, command, value);
+    }
+  }
+
+  setCapabilityValue(device, command, value) {
     console.log(`>=>=>=>= Homey Command to ${device.name}:  ${command}, ${value}`);
     device
       .setCapabilityValue(command, value)
@@ -100,10 +117,22 @@ class YioApp extends Homey.App {
   async handleGetDeviceState(connection, deviceId) {
     let device = await this.api.devices.getDevice({ id: deviceId });
     let onoff = this.convHomeyYioOnOff(device);
+    let optionalCapabilities = "";
+
+    console.log(device.capabilitiesObj);
+
+    if (device.capabilitiesObj.dim) {
+      console.log("if (device.capabilitiesObj.dim)");
+      optionalCapabilities = `${optionalCapabilities} "dim": "${device.capabilitiesObj.dim.value}," `;
+    }
+    if (device.capabilitiesObj.light_hue && device.capabilitiesObj.light_saturation && device.capabilitiesObj.dim) {
+      console.log("if (device.capabilitiesObj.light_hue && device.capabilitiesObj.light_saturation && device.capabilitiesObj.dim)");
+      optionalCapabilities = `${optionalCapabilities} "color": "${colorConvert.hsvToRgb(device.capabilitiesObj.light_hue.value, device.capabilitiesObj.light_saturation.value, device.capabilitiesObj.dim.value)}," `;
+    }
 
     deviceListToBeSubscribed.push({ connection, device });
 
-    let response = `{"type":"command", "command":"send_states", "data":{"entity_id": "${deviceId}", "onoff": "${onoff}", "friendly_name": "${device.name}", "supported_features": []}}`;
+    let response = `{"type":"command", "command":"send_states", "data":{"entity_id": "${deviceId}", "onoff": "${onoff}", ${optionalCapabilities} "friendly_name": "${device.name}", "supported_features": []}}`;
     connection.send(response);
     console.log(`<======= Send message: ${response}`);
   }
