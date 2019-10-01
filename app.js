@@ -225,6 +225,7 @@ function subscribeToDeviceEvents(connection, device) {
   for (let i in device.capabilities) {
     if (["onoff", "dim"].includes(device.capabilities[i])) {
       console.log(`======== created listener for ${device.name}:${device.capabilities[i]}`);
+
       try {
         device.makeCapabilityInstance(device.capabilities[i], value => {
           console.log(`=======> statechanged:"${device.capabilities[i]}" to:"${value}" on:"${device.name}".`);
