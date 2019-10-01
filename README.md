@@ -1,4 +1,4 @@
-# YIO intergration. 0.3
+# YIO intergration. 0.3.1
 
 This app enables YIO to intergrate with Homey.
 It enables controll for Homey connected devices and show's their active state.
@@ -53,9 +53,18 @@ Understanding that braking changes will happen while the intergration is in full
 
 ## Versions
 
-### 0.1
+### 0.3.1
 
-- Initial proof of concept.
+- Initial config exchange bug fixed.
+
+### 0.3.0
+
+- Added collor support.
+- Changed handling of initial capability states.
+
+### 0.2.1
+
+- Fixed a small state change bug.
 
 ### 0.2
 
@@ -63,11 +72,6 @@ Understanding that braking changes will happen while the intergration is in full
 - Started cleaning code.
 - Changed API calls between YIO and Homey. (Breaking)
 
-### 0.2.1
+### 0.1
 
-- Fixed a small state change bug.
-
-### 0.3.0
-
-- Added collor support.
-- Changed handling of initial capability states.
+- Initial proof of concept.
