@@ -53,6 +53,10 @@ Understanding that braking changes will happen while the intergration is in full
 
 ## Versions
 
+### 0.3.2
+
+- Initial config exchange reworked.
+
 ### 0.3.1
 
 - Initial config exchange bug fixed.

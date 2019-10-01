@@ -110,18 +110,19 @@ class YioApp extends Homey.App {
   //This function responds with with the state of the devices and subscribes to state events.
   async handleGetDeviceState(connection, deviceId) {
     let device = await this.api.devices.getDevice({ id: deviceId });
-    let onoff = this.convHomeyYioOnOff(device);
+    //let onoff = this.convHomeyYioOnOff(device);
+    //const response = JSON.stringify({ type: "event", data: { entity_id: device.id, [capName]: value } });
+
     let responseObject = {
-      type: "command",
-      command: "send_states",
+      type: "sendStates",
       data: {
-        entity_id: deviceId,
-        friendly_name: device.name,
-        supported_features: [],
-        onoff
+        entity_id: deviceId
       }
     };
 
+    if (device.capabilitiesObj.onoff) {
+      responseObject.data.onoff = device.capabilitiesObj.onoff.value;
+    }
     if (device.capabilitiesObj.dim) {
       responseObject.data.dim = device.capabilitiesObj.dim.value;
     }
