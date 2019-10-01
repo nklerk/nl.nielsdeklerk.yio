@@ -83,13 +83,8 @@ class YioApp extends Homey.App {
     if (command == "toggle") {
       command = "onoff";
       value = !device.capabilitiesObj.onoff.value;
-      console.log(device.capabilitiesObj.onoff.value);
-      console.log(typeof device.capabilitiesObj.onoff.value);
-      console.log(value);
     }
     if (command == "color") {
-      console.log(typeof value);
-      console.log(value);
       let c = colorConvert.rgbToHsv(value[0], value[1], value[2]);
       this.setCapabilityValue(device, "light_hue", c[0]);
       this.setCapabilityValue(device, "light_saturation", c[1]);
