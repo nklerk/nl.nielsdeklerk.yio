@@ -1,6 +1,6 @@
 {
   "id": "nl.nielsdeklerk.yio",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "sdk": 2,
   "permissions": ["homey:manager:api"],
   "brandColor": "#000000",

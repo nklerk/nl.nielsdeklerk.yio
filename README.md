@@ -1,4 +1,4 @@
-# YIO intergration. 0.3.2
+# YIO intergration. 0.4.0
 
 This app enables YIO to intergrate with Homey.
 It enables controll for Homey connected devices and show's their active state.
@@ -52,6 +52,11 @@ A homey and a YIO remote installed.
 Understanding that braking changes will happen while the intergration is in full development.
 
 ## Versions
+
+### 0.4.0
+
+- Added MediaPlayer suppot.
+- Started to make the code modular.
 
 ### 0.3.2
 
