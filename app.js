@@ -6,17 +6,16 @@
 const Homey = require("homey");
 const { HomeyAPI } = require("athom-api");
 const WebSocket = require("ws");
-const mdns = require("mdns-js");
 const colorConvert = require("./colorconversions");
+const homeyEvents = require("./homey_events");
+const serviceMDNS = require("./service_mdns");
 
 const API_SERVICE_PORT = 8936;
 const API_SERVICE_NAME = "yio2homeyapi";
 const MESSAGE_CONNECTED = '{"type":"connected"}';
 const MESSAGE_GETCONFIG = '{"type": "command","command": "get_config"}';
-const SUBSCRIBE_INITIAL_AFTER = 10000;
-const SUBSCRIBE_DELAY = 200;
 
-let deviceListToBeSubscribed = [];
+let connectionManager = {};
 
 class YioApp extends Homey.App {
   getApi() {
@@ -26,23 +25,11 @@ class YioApp extends Homey.App {
     return this.api;
   }
 
-  // Start MDNS advertisement.
-  startMdns() {
-    console.log(`Advertising service as  _${API_SERVICE_NAME}._tcp on port ${API_SERVICE_PORT}`);
-    var service = mdns.createAdvertisement(mdns.tcp(API_SERVICE_NAME), API_SERVICE_PORT, {
-      name: "hello",
-      txt: {
-        txtvers: "1"
-      }
-    });
-    service.start();
-  }
-
   // Start API Service.
   async startYioApiService() {
     const ApiService = new WebSocket.Server({ port: API_SERVICE_PORT });
     ApiService.on("connection", connection => {
-      this.timer = setTimeout(slowsubscribe, SUBSCRIBE_INITIAL_AFTER);
+      homeyEvents.startSubscribe();
       console.log("=======> ApiService incomming connection");
 
       connection.on("message", message => {
@@ -62,7 +49,6 @@ class YioApp extends Homey.App {
   // handles incomming API messages
   async messageHandler(connection, message) {
     try {
-      console.log(`=======> Received message: ${message}`);
       let jsonMessage = JSON.parse(message);
       if (jsonMessage.type && jsonMessage.type == "sendConfig") {
         for (let deviceId of jsonMessage.devices) {
@@ -70,6 +56,7 @@ class YioApp extends Homey.App {
           this.handleGetDeviceState(connection, deviceId);
         }
       } else if (jsonMessage.type && jsonMessage.type == "command") {
+        console.log(`=======> Received command: ${message}`);
         this.commandDeviceState(jsonMessage.deviceId, jsonMessage.command, jsonMessage.value);
       }
     } catch (e) {
@@ -110,8 +97,6 @@ class YioApp extends Homey.App {
   //This function responds with with the state of the devices and subscribes to state events.
   async handleGetDeviceState(connection, deviceId) {
     let device = await this.api.devices.getDevice({ id: deviceId });
-    //let onoff = this.convHomeyYioOnOff(device);
-    //const response = JSON.stringify({ type: "event", data: { entity_id: device.id, [capName]: value } });
 
     let responseObject = {
       type: "sendStates",
@@ -130,7 +115,7 @@ class YioApp extends Homey.App {
       responseObject.data.color = colorConvert.hsvToRgb(device.capabilitiesObj.light_hue.value, device.capabilitiesObj.light_saturation.value, device.capabilitiesObj.dim.value);
     }
 
-    deviceListToBeSubscribed.push({ connection, device });
+    homeyEvents.addDevice(connection, device);
 
     let response = JSON.stringify(responseObject);
     connection.send(response);
@@ -151,7 +136,7 @@ class YioApp extends Homey.App {
     console.log("starting server");
 
     this.api = await this.getApi();
-    this.startMdns();
+    serviceMDNS.start(API_SERVICE_NAME, API_SERVICE_PORT);
     this.startYioApiService();
 
     //List all devices for easy adding to yio config.json
@@ -169,11 +154,19 @@ class YioApp extends Homey.App {
     for (let i in homeyDevicesAll) {
       const device = homeyDevicesAll[i];
       if (!areas.includes(device.zoneName)) areas.push(device.zoneName);
+
       if (device && device.class && device.class == "light") {
         let deviceYjson = this.ConversionLightDeviceHtoY(device);
         deviceYjson = JSON.stringify(deviceYjson);
         console.log(deviceYjson);
         console.log(",");
+      }
+
+      if (device && device.class && device.class == "speaker") {
+        //let deviceYjson = this.ConversionLightDeviceHtoY(device);
+        //deviceYjson = JSON.stringify(deviceYjson);
+        //console.log(deviceYjson);
+        //console.log(",");
       }
     }
     //Print all areas
@@ -206,36 +199,3 @@ class YioApp extends Homey.App {
 }
 
 module.exports = YioApp;
-
-// This function starts the subscribe function every x seconds.
-function slowsubscribe() {
-  if (deviceListToBeSubscribed.length > 0) {
-    subscribeToDeviceEvents(deviceListToBeSubscribed[0].connection, deviceListToBeSubscribed[0].device);
-    deviceListToBeSubscribed.shift();
-    setTimeout(slowsubscribe, SUBSCRIBE_DELAY);
-  }
-}
-
-// This function subscribes to state events and handles the update handling to YIO.
-function subscribeToDeviceEvents(connection, device) {
-  for (let i in device.capabilities) {
-    if (["onoff", "dim"].includes(device.capabilities[i])) {
-      console.log(`======== created listener for ${device.name}:${device.capabilities[i]}`);
-
-      try {
-        device.makeCapabilityInstance(device.capabilities[i], value => {
-          console.log(`=======> statechanged:"${device.capabilities[i]}" to:"${value}" on:"${device.name}".`);
-          let capName = device.capabilities[i];
-          const response = JSON.stringify({ type: "event", data: { entity_id: device.id, [capName]: value } });
-          console.log(`<======= Inform YIO: ${response}`);
-          connection.send(response);
-        });
-      } catch (e) {
-        console.log("ERROR LISTENERS>>>>");
-        console.log(device);
-        console.log(e);
-        console.log("<<<<ERROR LISTENERS");
-      }
-    }
-  }
-}
